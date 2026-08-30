@@ -87,9 +87,22 @@ jobs:
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASES: ${{ steps.manifest.outputs.release }}
         run: |
-          tag="appimages-${GITHUB_SHA::7}"
+          release_date="$(date -u +%Y.%m.%d.%H%M%S)"
+          tag="appimages-${release_date}-${GITHUB_SHA::7}"
+          {
+            echo "Unofficial AppImages built from the upstream releases."
+            echo
+            echo "Versions used:"
+            while IFS='|' read -r name version download_url description; do
+              [ -n "$name" ] || continue
+              printf -- '- %s: %s\n' "$name" "$version"
+            done <<< "$RELEASES"
+          } > release-notes.md
+
           gh release create "$tag" dist/* \
-            --title "AppImages ${GITHUB_SHA::7}" \
-            --notes "AppImages packaged from resources/release.yml at ${GITHUB_SHA}." \
+            --title "OpenSW AppImages ${release_date}" \
+            --notes-file release-notes.md \
+            --latest \
             --target "$GITHUB_SHA"
