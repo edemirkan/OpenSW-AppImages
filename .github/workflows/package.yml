@@ -71,6 +71,7 @@ jobs:
             cat > "$appdir/$slug.desktop" <<EOF
           [Desktop Entry]
           Name=$name
+          X-AppImage-Version=$version
           Comment=$description
           Exec=$slug
           Icon=$slug
