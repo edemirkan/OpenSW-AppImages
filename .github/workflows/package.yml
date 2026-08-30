@@ -43,7 +43,7 @@ jobs:
           rm -rf build dist
           mkdir -p build dist
 
-          while IFS='|' read -r name version download_url; do
+          while IFS='|' read -r name version download_url description; do
             [ -n "$name" ] || continue
             slug="$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]-')"
             workdir="build/${slug}"
@@ -71,6 +71,7 @@ jobs:
             cat > "$appdir/$slug.desktop" <<EOF
           [Desktop Entry]
           Name=$name
+          Comment=$description
           Exec=$slug
           Icon=$slug
           Type=Application

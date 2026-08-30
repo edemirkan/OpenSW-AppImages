@@ -1,9 +1,10 @@
 OpenTie:
   release:
     url: https://github.com/elyosh/OpenTIE/releases/download/v{{version}}/opentie-{{version}}-linux-x86_64-release.tar.xz
+    description: "OpenTIE is an open-source reimplementation of Star Wars: TIE Fighter."
     version: 0.0.5
-
 OpenXWA:
   release:
     url: https://github.com/elyosh/OpenXWA/releases/download/v{{version}}/openxwa-{{version}}-linux-x86_64-release.tar.xz
+    description: "OpenXWA is an open-source reimplementation of the 1999 game Star Wars: X-Wing Alliance."
     version: 0.0.16
