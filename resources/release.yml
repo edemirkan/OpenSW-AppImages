@@ -1,0 +1,9 @@
+OpenTie:
+  release:
+    url: https://github.com/elyosh/OpenTIE/releases/download/v{{version}}/opentie-{{version}}-linux-x86_64-release.tar.xz
+    version: 0.0.5
+
+OpenXWA:
+  release:
+    url: https://github.com/elyosh/OpenXWA/releases/download/v{{version}}/openxwa-{{version}}-linux-x86_64-release.tar.xz
+    version: 0.0.16
