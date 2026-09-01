@@ -7,4 +7,4 @@ OpenXWA:
   release:
     url: https://github.com/elyosh/OpenXWA/releases/download/v{{version}}/openxwa-{{version}}-linux-x86_64-release.tar.xz
     description: "OpenXWA is an open-source reimplementation of the 1999 game Star Wars: X-Wing Alliance."
-    version: 0.0.16
+    version: 0.0.17
