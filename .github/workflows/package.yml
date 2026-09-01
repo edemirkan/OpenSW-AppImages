@@ -38,6 +38,7 @@ jobs:
       - name: Build AppImages
         env:
           RELEASES: ${{ steps.manifest.outputs.release }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
           rm -rf build dist
@@ -48,6 +49,7 @@ jobs:
             slug="$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]-')"
             workdir="build/${slug}"
             appdir="${workdir}/${slug}.AppDir"
+            update_scheme="gh-releases-zsync|${GITHUB_REPOSITORY//\//'|'}|latest|${slug}-${version}-x86_64.AppImage.zsync"
 
             mkdir -p "$appdir/usr/lib/$slug"
             curl --fail --location --silent --show-error "$download_url" --output "$workdir/release.tar.xz"
@@ -80,7 +82,7 @@ jobs:
           EOF
             printf '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#20252b"/><text x="128" y="145" fill="white" font-size="64" text-anchor="middle">%s</text></svg>\n' "$name" > "$appdir/$slug.svg"
 
-            ARCH=x86_64 ./appimagetool.AppImage "$appdir" "dist/${slug}-${version}-x86_64.AppImage"
+            ARCH=x86_64 ./appimagetool.AppImage -u "$update_scheme" "$appdir" "dist/${slug}-${version}-x86_64.AppImage"
             zsyncmake "dist/${slug}-${version}-x86_64.AppImage" \
               -o "dist/${slug}-${version}-x86_64.AppImage.zsync"
           done <<< "$RELEASES"
