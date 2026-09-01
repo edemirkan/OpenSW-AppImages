@@ -14,7 +14,7 @@ while IFS='|' read -r name version download_url description; do
   slug="$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]-')"
   workdir="build/${slug}"
   appdir="${workdir}/${slug}.AppDir"
-  update_scheme="gh-releases-zsync|${GITHUB_REPOSITORY//\//'|'}|latest|${slug}-${version}-x86_64.AppImage.zsync"
+  update_scheme="gh-releases-zsync|${GITHUB_REPOSITORY//\//'|'}|latest|${slug}-*-x86_64.AppImage.zsync"
 
   mkdir -p "$appdir/usr/lib/$slug"
   curl --fail --location --silent --show-error "$download_url" --output "$workdir/release.tar.xz"
