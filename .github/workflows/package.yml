@@ -80,7 +80,7 @@ jobs:
           EOF
             printf '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#20252b"/><text x="128" y="145" fill="white" font-size="64" text-anchor="middle">%s</text></svg>\n' "$name" > "$appdir/$slug.svg"
 
-            ARCH=x86_64 ./appimagetool.AppImage --appimage-extract-and-run "$appdir" "dist/${slug}-${version}-x86_64.AppImage"
+            ARCH=x86_64 ./appimagetool.AppImage "$appdir" "dist/${slug}-${version}-x86_64.AppImage"
             zsyncmake "dist/${slug}-${version}-x86_64.AppImage" \
               -o "dist/${slug}-${version}-x86_64.AppImage.zsync"
           done <<< "$RELEASES"
@@ -92,6 +92,10 @@ jobs:
         run: |
           release_date="$(date -u +%Y.%m.%d.%H%M%S)"
           tag="appimages-${release_date}-${GITHUB_SHA::7}"
+          prerelease_flag=""
+          if [ "${GITHUB_REF_NAME}" != "main" ]; then
+            prerelease_flag="--prerelease"
+          fi
           {
             echo "Unofficial AppImages built from the upstream releases."
             echo
@@ -105,5 +109,6 @@ jobs:
           gh release create "$tag" dist/* \
             --title "OpenSW AppImages ${release_date}" \
             --notes-file release-notes.md \
-            --latest \
-            --target "$GITHUB_SHA"
+            --target "$GITHUB_SHA" \
+            ${prerelease_flag} \
+            $(if [ "${GITHUB_REF_NAME}" = "main" ]; then echo "--latest"; fi)
