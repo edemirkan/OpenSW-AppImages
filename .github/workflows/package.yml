@@ -5,7 +5,7 @@ on:
   push:
     paths:
       - resources/release.yml
-      - scripts/read_releases.py
+      - ci/read_releases.py
       - .github/workflows/package.yml
 
 permissions:
@@ -26,7 +26,7 @@ jobs:
         env:
           RELEASES_FILE: resources/release.yml
         run: |
-          python3 scripts/read_releases.py
+          python3 ci/read_releases.py
 
       - name: Download appimagetool
         run: |
