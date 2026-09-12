@@ -16,9 +16,9 @@ output_lines = []
 for name, release in releases.items():
     release_info = release["release"]
     version = str(release_info["version"])
-    url = release_info["url"].replace("{{version}}", version)
+    scm_url = release["scm"]["url"]
     description = release.get("description", "")
-    output_lines.append(f"{name}|{version}|{url}|{description}")
+    output_lines.append(f"{name}|{version}|{scm_url}|{description}")
 
 with open(output_path, "a", encoding="utf-8") as output_file:
     output_file.write("release<<EOF\n")

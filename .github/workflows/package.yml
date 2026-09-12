@@ -37,10 +37,14 @@ jobs:
             --output appimagetool.AppImage
           chmod +x appimagetool.AppImage
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
       - name: Build AppImages
         env:
           RELEASES: ${{ steps.manifest.outputs.release }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          DOCKER_CACHE_TO: ${{ github.event_name == 'push' && 'type=gha,mode=max,scope=linux' || '' }}
         run: bash ci/build_appimages.sh
 
       - name: Publish GitHub release
