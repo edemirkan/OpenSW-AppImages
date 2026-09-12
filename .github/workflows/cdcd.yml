@@ -34,7 +34,7 @@ jobs:
         run: python3 ci/read_releases.py
 
   build:
-    name: Build (${{ matrix.name }}, ${{ matrix.kind }}, ${{ matrix.sha }})
+    name: Build (${{ matrix.name }}, ${{ matrix.build_label }})
     needs: manifest
     runs-on: ubuntu-latest
     strategy:

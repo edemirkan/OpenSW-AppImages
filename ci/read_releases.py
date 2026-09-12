@@ -37,14 +37,16 @@ for name, release in releases.items():
         ("release", f"v{version}", version),
         ("git", "main", ""),
     ):
+        sha = resolve_sha(repository, ref)
         matrix.append({
+            "build_label": f"release:v{version}, {sha}" if kind == "release" else f"git:{sha}",
             "description": description,
             "kind": kind,
             "name": name,
             "project_prefix": {"opentie": "TIE", "openxwa": "XWA"}[slug],
             "ref": ref,
             "repository": repository,
-            "sha": resolve_sha(repository, ref),
+            "sha": sha,
             "slug": slug,
             "update_filename": f"{slug}-{'git-' if kind == 'git' else ''}*-x86_64.AppImage.zsync",
             "version": build_version,
