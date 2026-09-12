@@ -23,6 +23,7 @@ jobs:
       matrix: ${{ steps.read.outputs.matrix }}
       release: ${{ steps.read.outputs.release }}
       release_notes: ${{ steps.read.outputs.release_notes }}
+      should_build: ${{ steps.read.outputs.should_build }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -39,6 +40,7 @@ jobs:
 
   build:
     name: Build (${{ matrix.name }}, ${{ matrix.build_label }})
+    if: matrix.should_build
     needs: manifest
     runs-on: ubuntu-latest
     strategy:
@@ -95,6 +97,7 @@ jobs:
       - manifest
       - build
     runs-on: ubuntu-latest
+    if: needs.manifest.outputs.should_build == 'true'
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
