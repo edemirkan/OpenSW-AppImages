@@ -18,10 +18,9 @@ matrix = []
 for name, release in releases.items():
     release_info = release["release"]
     version = str(release_info["version"])
-    scm_url = release["scm"]["url"]
-    repository = scm_url.removeprefix("https://github.com/").removesuffix(".git")
+    repository = release["scm"]["url"]
     description = release.get("description", "")
-    output_lines.append(f"{name}|{version}|{scm_url}|{description}")
+    output_lines.append(f"{name}|{version}|{repository}|{description}")
     slug = "".join(character.lower() for character in name if character.isalnum() or character == "-")
     for kind, ref, build_version in (
         ("release", f"v{version}", version),
