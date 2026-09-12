@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Publish AppImages as GitHub release
 # Requires environment variables:
-#   RELEASES - pipe-delimited release data
+#   RELEASE_NOTES - formatted release entries
 #   GH_TOKEN - GitHub API token
 #   GITHUB_REF_NAME - branch name
 #   GITHUB_SHA - commit SHA
@@ -19,10 +19,7 @@ fi
   echo "Unofficial AppImages built from the upstream releases."
   echo
   echo "Versions used:"
-  while IFS='|' read -r name version download_url description; do
-    [ -n "$name" ] || continue
-    printf -- '- %s: %s\n' "$name" "$version"
-  done <<< "$RELEASES"
+  printf '%s\n' "$RELEASE_NOTES"
 } > release-notes.md
 
 gh release create "$tag" dist/* \
