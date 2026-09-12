@@ -2,9 +2,11 @@ name: Build, Package and Release AppImages
 
 on:
   workflow_dispatch:
+  # schedule:
+  #   - cron: "17 3 * * *"
   push:
     paths:
-      - resources/release.yml
+      - resources/meta.yml
       - ci/read_releases.py
       - ci/package_appimage.sh
       - ci/publish_release.sh
@@ -31,7 +33,8 @@ jobs:
       - name: Read release manifest
         id: read
         env:
-          RELEASES_FILE: resources/release.yml
+          RELEASES_FILE: resources/meta.yml
+          GITHUB_TOKEN: ${{ github.token }}
         run: python3 ci/read_releases.py
 
   build:
@@ -73,6 +76,7 @@ jobs:
         env:
           PROJECT_NAME: ${{ matrix.name }}
           BUILD_KIND: ${{ matrix.kind }}
+          EXECUTABLE_NAME: ${{ matrix.executable_name }}
           IMAGE_VERSION: ${{ steps.upstream.outputs.version }}
           DESCRIPTION: ${{ matrix.description }}
           UPDATE_FILENAME: ${{ matrix.update_filename }}
