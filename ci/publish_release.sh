@@ -16,9 +16,6 @@ if [ "${GITHUB_REF_NAME}" != "main" ]; then
 fi
 
 {
-  echo "Unofficial AppImages built from the upstream releases."
-  echo
-  echo "Versions used:"
   printf '%s\n' "$RELEASE_NOTES"
 } > release-notes.md
 
