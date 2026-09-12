@@ -19,6 +19,7 @@ for name, release in releases.items():
     release_info = release["release"]
     version = str(release_info["version"])
     scm_url = release["scm"]["url"]
+    repository = scm_url.removeprefix("https://github.com/").removesuffix(".git")
     description = release.get("description", "")
     output_lines.append(f"{name}|{version}|{scm_url}|{description}")
     slug = "".join(character.lower() for character in name if character.isalnum() or character == "-")
@@ -32,7 +33,7 @@ for name, release in releases.items():
             "name": name,
             "project_prefix": {"opentie": "TIE", "openxwa": "XWA"}[slug],
             "ref": ref,
-            "repository": scm_url,
+            "repository": repository,
             "slug": slug,
             "update_filename": f"{slug}-{'git-' if kind == 'git' else ''}*-x86_64.AppImage.zsync",
             "version": build_version,

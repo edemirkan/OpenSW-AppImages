@@ -4,7 +4,7 @@ description: Check out an upstream project and build its Linux artifact with Doc
 
 inputs:
   repository:
-    description: Upstream repository URL
+    description: Upstream repository in owner/repository format
     required: true
   ref:
     description: Git ref to build
