@@ -73,6 +73,7 @@ jobs:
         env:
           PROJECT_NAME: ${{ matrix.name }}
           BUILD_KIND: ${{ matrix.kind }}
+          EXECUTABLE_NAME: ${{ matrix.executable_name }}
           IMAGE_VERSION: ${{ steps.upstream.outputs.version }}
           DESCRIPTION: ${{ matrix.description }}
           UPDATE_FILENAME: ${{ matrix.update_filename }}

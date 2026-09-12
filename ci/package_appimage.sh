@@ -5,15 +5,11 @@ set -euo pipefail
 : "${IMAGE_VERSION:?IMAGE_VERSION is required}"
 : "${DESCRIPTION:?DESCRIPTION is required}"
 : "${BUILD_KIND:?BUILD_KIND is required}"
+: "${EXECUTABLE_NAME:?EXECUTABLE_NAME is required}"
 : "${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
 : "${UPDATE_FILENAME:?UPDATE_FILENAME is required}"
 
 slug=$(printf '%s' "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]-')
-case "$slug" in
-  opentie) executable_name=OpenTIE ;;
-  openxwa) executable_name=OpenXWA ;;
-  *) echo "Unsupported project name: $PROJECT_NAME" >&2; exit 1 ;;
-esac
 desktop_id="$slug"
 display_name="$PROJECT_NAME"
 if [ "$BUILD_KIND" = main ]; then
@@ -29,7 +25,7 @@ rm -rf "$workdir"
 mkdir -p "$appdir/usr/lib/$slug" dist
 tar --extract --file "$artifact" --strip-components=1 --directory "$appdir/usr/lib/$slug"
 
-executable="$appdir/usr/lib/$slug/$executable_name"
+executable="$appdir/usr/lib/$slug/$EXECUTABLE_NAME"
 [ -n "$executable" ] || { echo "No executable found in $artifact" >&2; exit 1; }
 [ -x "$executable" ] || { echo "Expected executable not found: $executable" >&2; exit 1; }
 executable_path=${executable#"$appdir/usr/lib/$slug/"}

@@ -12,3 +12,10 @@ OpenXWA:
   release:
     url: https://github.com/elyosh/OpenXWA/releases/download/v{{version}}/openxwa-{{version}}-linux-x86_64-release.tar.xz
     version: 0.0.17
+OpenXvT:
+  description: "OpenXvT is an open-source reimplementation of the 1997 game Star Wars: X-Wing vs. TIE Fighter with its Balance of Power expansion."
+  scm:
+    url: elyosh/OpenXvT
+  release:
+    url: https://github.com/elyosh/OpenXvT/releases/download/v{{version}}/openxvt-{{version}}-linux-x86_64-release.tar.xz
+    version: 0.0.1

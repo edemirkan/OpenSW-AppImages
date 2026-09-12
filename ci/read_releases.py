@@ -34,6 +34,8 @@ for name, release in releases.items():
     description = release.get("description", "")
     output_lines.append(f"{name}|{version}|{repository}|{description}")
     slug = "".join(character.lower() for character in name if character.isalnum() or character == "-")
+    executable_name = repository.rsplit("/", 1)[-1]
+    project_prefix = executable_name.removeprefix("Open").upper()
     release_sha = ""
     main_sha = ""
     for kind, ref, build_version in (
@@ -50,11 +52,12 @@ for name, release in releases.items():
             "description": description,
             "kind": kind,
             "name": name,
-            "project_prefix": {"opentie": "TIE", "openxwa": "XWA"}[slug],
+            "project_prefix": project_prefix,
             "ref": ref,
             "repository": repository,
             "sha": sha,
             "slug": slug,
+            "executable_name": executable_name,
             "update_filename": f"{slug}-{'main-' if kind == 'main' else ''}*-x86_64.AppImage.zsync",
             "version": build_version,
         })
