@@ -4,6 +4,7 @@ set -euo pipefail
 : "${PROJECT_NAME:?PROJECT_NAME is required}"
 : "${IMAGE_VERSION:?IMAGE_VERSION is required}"
 : "${DESCRIPTION:?DESCRIPTION is required}"
+: "${BUILD_KIND:?BUILD_KIND is required}"
 : "${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
 : "${UPDATE_FILENAME:?UPDATE_FILENAME is required}"
 
@@ -13,6 +14,12 @@ case "$slug" in
   openxwa) executable_name=OpenXWA ;;
   *) echo "Unsupported project name: $PROJECT_NAME" >&2; exit 1 ;;
 esac
+desktop_id="$slug"
+display_name="$PROJECT_NAME"
+if [ "$BUILD_KIND" = git ]; then
+  desktop_id="$slug-git"
+  display_name="$PROJECT_NAME (git)"
+fi
 workdir="build/package-$slug"
 appdir="$workdir/$slug.AppDir"
 artifact=$(find build/artifacts -type f -name '*.tar.xz' -print -quit)
@@ -33,11 +40,12 @@ printf '%s\n' '#!/bin/sh' 'set -e' \
   > "$appdir/AppRun"
 chmod +x "$appdir/AppRun"
 
-printf '%s\n' '[Desktop Entry]' "Name=$PROJECT_NAME" \
-  "X-AppImage-Version=$IMAGE_VERSION" "Comment=$DESCRIPTION" \
-  "Exec=$slug" "Icon=$slug" 'Type=Application' 'Categories=Game;' \
-  > "$appdir/$slug.desktop"
-printf '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#20252b"/><text x="128" y="145" fill="white" font-size="64" text-anchor="middle">%s</text></svg>\n' "$PROJECT_NAME" > "$appdir/$slug.svg"
+printf '%s\n' '[Desktop Entry]' "X-AppImage-Version=$IMAGE_VERSION" \
+  "Comment=$DESCRIPTION" \
+  "Name=$display_name" "Exec=$slug" "Icon=$desktop_id" \
+  'Type=Application' 'Categories=Game;' \
+  > "$appdir/$desktop_id.desktop"
+printf '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#20252b"/><text x="128" y="145" fill="white" font-size="64" text-anchor="middle">%s</text></svg>\n' "$display_name" > "$appdir/$desktop_id.svg"
 
 repository_for_update=$(printf '%s' "$GITHUB_REPOSITORY" | tr '/' '|')
 update_scheme="gh-releases-zsync|$repository_for_update|latest|$UPDATE_FILENAME"
