@@ -1,5 +1,6 @@
 import os
 import json
+import subprocess
 from pathlib import Path
 
 import yaml
@@ -12,6 +13,16 @@ if not output_path:
 
 with manifest_path.open(encoding="utf-8") as manifest_file:
     releases = yaml.safe_load(manifest_file)
+
+
+def resolve_sha(repository, ref):
+    output = subprocess.check_output(
+        ["git", "ls-remote", f"https://github.com/{repository}.git", ref],
+        text=True,
+    )
+    sha = output.split()[0]
+    return sha[:7]
+
 
 output_lines = []
 matrix = []
@@ -33,6 +44,7 @@ for name, release in releases.items():
             "project_prefix": {"opentie": "TIE", "openxwa": "XWA"}[slug],
             "ref": ref,
             "repository": repository,
+            "sha": resolve_sha(repository, ref),
             "slug": slug,
             "update_filename": f"{slug}-{'git-' if kind == 'git' else ''}*-x86_64.AppImage.zsync",
             "version": build_version,
