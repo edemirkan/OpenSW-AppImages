@@ -9,7 +9,7 @@ on:
       - ci/package_appimage.sh
       - ci/publish_release.sh
       - .github/actions/build-project/action.yml
-      - .github/workflows/package.yml
+      - .github/workflows/cicd.yml
 
 permissions:
   contents: write
