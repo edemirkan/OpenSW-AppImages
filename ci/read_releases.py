@@ -3,7 +3,6 @@ import json
 import subprocess
 import urllib.request
 import urllib.error
-import re
 from pathlib import Path
 
 import yaml
@@ -60,16 +59,24 @@ def resolve_published_builds():
         if error.code == 404:
             return set()
         raise
+    is_feature_branch = os.environ.get("GITHUB_REF_NAME") != "main"
+    matching_releases = [
+        release for release in releases
+        if release.get("prerelease", False) == is_feature_branch
+    ]
+    if not matching_releases:
+        return set()
+    lines = matching_releases[0].get("body", "").splitlines()
+    try:
+        start = lines.index("<!-- opensw-appimages-state -->") + 1
+        end = lines.index("<!-- /opensw-appimages-state -->")
+    except ValueError:
+        return set()
     published = set()
-    for release in releases:
-        for match in re.finditer(
-            r"^- ([^:]+): release@([^ ]+) \([^)]*\), main@([^ ]+)",
-            release.get("body", ""),
-            re.MULTILINE,
-        ):
-            name, release_tag, main_sha = match.groups()
-            published.add((name, "release", release_tag))
-            published.add((name, "main", main_sha))
+    for line in lines[start:end]:
+        fields = line.split("|", 2)
+        if len(fields) == 3:
+            published.add(tuple(fields))
     return published
 
 
@@ -121,6 +128,11 @@ with open(output_path, "a", encoding="utf-8") as output_file:
     output_file.write("\nEOF\n")
     output_file.write("release_notes<<EOF\n")
     output_file.write("\n".join(release_notes))
+    output_file.write("\n\n<!-- opensw-appimages-state -->\n")
+    for build in matrix:
+        value = build["ref"] if build["kind"] == "release" else build["sha"]
+        output_file.write(f"{build['name']}|{build['kind']}|{value}\n")
+    output_file.write("<!-- /opensw-appimages-state -->")
     output_file.write("\nEOF\n")
     output_file.write(f"should_build={str(should_build).lower()}\n")
     output_file.write("matrix<<EOF\n")

@@ -36,6 +36,7 @@ jobs:
         env:
           RELEASES_FILE: resources/meta.yml
           GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
         run: python3 ci/read_releases.py
 
   build:
