@@ -43,7 +43,7 @@ for name, release in releases.items():
             f"- {name}-{kind}: {f'v{version}' if kind == 'release' else sha}"
         )
         matrix.append({
-            "build_label": f"release:v{version}, {sha}" if kind == "release" else f"main:{sha}",
+            "build_label": f"release@v{version}, {sha}" if kind == "release" else f"main@{sha}",
             "description": description,
             "kind": kind,
             "name": name,
