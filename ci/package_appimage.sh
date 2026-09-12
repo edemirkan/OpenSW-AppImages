@@ -8,6 +8,11 @@ set -euo pipefail
 : "${UPDATE_FILENAME:?UPDATE_FILENAME is required}"
 
 slug=$(printf '%s' "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]-')
+case "$slug" in
+  opentie) executable_name=OpenTIE ;;
+  openxwa) executable_name=OpenXWA ;;
+  *) echo "Unsupported project name: $PROJECT_NAME" >&2; exit 1 ;;
+esac
 workdir="build/package-$slug"
 appdir="$workdir/$slug.AppDir"
 artifact=$(find build/artifacts -type f -name '*.tar.xz' -print -quit)
@@ -17,8 +22,9 @@ rm -rf "$workdir"
 mkdir -p "$appdir/usr/lib/$slug" dist
 tar --extract --file "$artifact" --strip-components=1 --directory "$appdir/usr/lib/$slug"
 
-executable=$(find "$appdir/usr/lib/$slug" -type f -perm /111 -print | head -n 1)
+executable="$appdir/usr/lib/$slug/$executable_name"
 [ -n "$executable" ] || { echo "No executable found in $artifact" >&2; exit 1; }
+[ -x "$executable" ] || { echo "Expected executable not found: $executable" >&2; exit 1; }
 executable_path=${executable#"$appdir/usr/lib/$slug/"}
 
 printf '%s\n' '#!/bin/sh' 'set -e' \
