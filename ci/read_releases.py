@@ -124,5 +124,8 @@ with open(output_path, "a", encoding="utf-8") as output_file:
     output_file.write("\nEOF\n")
     output_file.write(f"should_build={str(should_build).lower()}\n")
     output_file.write("matrix<<EOF\n")
-    output_file.write(json.dumps(matrix, separators=(",", ":")))
+    output_file.write(json.dumps(
+        [build for build in matrix if build["should_build"]],
+        separators=(",", ":"),
+    ))
     output_file.write("\nEOF\n")
