@@ -41,6 +41,7 @@ jobs:
 
   build:
     name: Build (${{ matrix.name }}, ${{ matrix.build_label }})
+    if: needs.manifest.outputs.should_build == 'true'
     needs: manifest
     runs-on: ubuntu-latest
     strategy:
