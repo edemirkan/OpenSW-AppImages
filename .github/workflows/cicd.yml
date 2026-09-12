@@ -2,8 +2,8 @@ name: Build, Package and Release AppImages
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "17 3 * * *"
+  # schedule:
+  #   - cron: "17 3 * * *"
   push:
     paths:
       - resources/meta.yml
