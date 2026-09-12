@@ -25,6 +25,7 @@ def resolve_sha(repository, ref):
 
 
 output_lines = []
+release_notes = []
 matrix = []
 for name, release in releases.items():
     release_info = release["release"]
@@ -38,6 +39,9 @@ for name, release in releases.items():
         ("git", "main", ""),
     ):
         sha = resolve_sha(repository, ref)
+        release_notes.append(
+            f"- {name}-{kind}: {f'v{version}' if kind == 'release' else sha}"
+        )
         matrix.append({
             "build_label": f"release:v{version}, {sha}" if kind == "release" else f"git:{sha}",
             "description": description,
@@ -55,6 +59,9 @@ for name, release in releases.items():
 with open(output_path, "a", encoding="utf-8") as output_file:
     output_file.write("release<<EOF\n")
     output_file.write("\n".join(output_lines))
+    output_file.write("\nEOF\n")
+    output_file.write("release_notes<<EOF\n")
+    output_file.write("\n".join(release_notes))
     output_file.write("\nEOF\n")
     output_file.write("matrix<<EOF\n")
     output_file.write(json.dumps(matrix, separators=(",", ":")))
