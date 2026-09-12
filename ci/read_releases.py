@@ -1,12 +1,13 @@
 import os
 import json
 import subprocess
+import urllib.request
 from pathlib import Path
 
 import yaml
 
 
-manifest_path = Path(os.environ.get("RELEASES_FILE", "resources/release.yml"))
+manifest_path = Path(os.environ.get("RELEASES_FILE", "resources/meta.yml"))
 output_path = os.environ.get("GITHUB_OUTPUT")
 if not output_path:
     raise RuntimeError("GITHUB_OUTPUT is required")
@@ -24,13 +25,27 @@ def resolve_sha(repository, ref):
     return sha[:7]
 
 
+def resolve_latest_release(repository):
+    request = urllib.request.Request(
+        f"https://api.github.com/repos/{repository}/releases/latest",
+        headers={"Accept": "application/vnd.github+json", "User-Agent": "OpenSW-AppImages"},
+    )
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        request.add_header("Authorization", f"Bearer {token}")
+    with urllib.request.urlopen(request) as response:
+        release = json.load(response)
+    tag = release["tag_name"]
+    version = tag.removeprefix("v")
+    return tag, version
+
+
 output_lines = []
 release_notes = []
 matrix = []
 for name, release in releases.items():
-    release_info = release["release"]
-    version = str(release_info["version"])
     repository = release["scm"]["url"]
+    release_tag, version = resolve_latest_release(repository)
     description = release.get("description", "")
     output_lines.append(f"{name}|{version}|{repository}|{description}")
     slug = "".join(character.lower() for character in name if character.isalnum() or character == "-")
@@ -39,7 +54,7 @@ for name, release in releases.items():
     release_sha = ""
     main_sha = ""
     for kind, ref, build_version in (
-        ("release", f"v{version}", version),
+        ("release", release_tag, version),
         ("main", "main", ""),
     ):
         sha = resolve_sha(repository, ref)
@@ -48,7 +63,7 @@ for name, release in releases.items():
         else:
             main_sha = sha
         matrix.append({
-            "build_label": f"release@v{version}, {sha}" if kind == "release" else f"main@{sha}",
+            "build_label": f"release@{release_tag}, {sha}" if kind == "release" else f"main@{sha}",
             "description": description,
             "kind": kind,
             "name": name,
@@ -61,7 +76,7 @@ for name, release in releases.items():
             "update_filename": f"{slug}-{'main-' if kind == 'main' else ''}*-x86_64.AppImage.zsync",
             "version": build_version,
         })
-    release_notes.append(f"- {name}: release@v{version} ({release_sha}), main@{main_sha}")
+    release_notes.append(f"- {name}: release@{release_tag} ({release_sha}), main@{main_sha}")
 
 with open(output_path, "a", encoding="utf-8") as output_file:
     output_file.write("release<<EOF\n")
