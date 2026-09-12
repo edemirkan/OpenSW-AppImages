@@ -70,7 +70,7 @@ runs:
       run: |
         version='${{ inputs.version }}'
         if [ -z "$version" ]; then
-          version='git-${{ steps.sha.outputs.short }}'
+          version='main-${{ steps.sha.outputs.short }}'
         fi
         echo "value=$version" >> "$GITHUB_OUTPUT"
 

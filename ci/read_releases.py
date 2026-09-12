@@ -36,14 +36,14 @@ for name, release in releases.items():
     slug = "".join(character.lower() for character in name if character.isalnum() or character == "-")
     for kind, ref, build_version in (
         ("release", f"v{version}", version),
-        ("git", "main", ""),
+        ("main", "main", ""),
     ):
         sha = resolve_sha(repository, ref)
         release_notes.append(
             f"- {name}-{kind}: {f'v{version}' if kind == 'release' else sha}"
         )
         matrix.append({
-            "build_label": f"release:v{version}, {sha}" if kind == "release" else f"git:{sha}",
+            "build_label": f"release:v{version}, {sha}" if kind == "release" else f"main:{sha}",
             "description": description,
             "kind": kind,
             "name": name,
@@ -52,7 +52,7 @@ for name, release in releases.items():
             "repository": repository,
             "sha": sha,
             "slug": slug,
-            "update_filename": f"{slug}-{'git-' if kind == 'git' else ''}*-x86_64.AppImage.zsync",
+            "update_filename": f"{slug}-{'main-' if kind == 'main' else ''}*-x86_64.AppImage.zsync",
             "version": build_version,
         })
 

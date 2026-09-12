@@ -16,9 +16,9 @@ case "$slug" in
 esac
 desktop_id="$slug"
 display_name="$PROJECT_NAME"
-if [ "$BUILD_KIND" = git ]; then
-  desktop_id="$slug-git"
-  display_name="$PROJECT_NAME (git)"
+if [ "$BUILD_KIND" = main ]; then
+  desktop_id="$slug-main"
+  display_name="$PROJECT_NAME (main)"
 fi
 workdir="build/package-$slug"
 appdir="$workdir/$slug.AppDir"
