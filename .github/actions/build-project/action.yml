@@ -1,0 +1,94 @@
+name: Build upstream project
+
+description: Check out an upstream project and build its Linux artifact with Docker Buildx
+
+inputs:
+  repository:
+    description: Upstream repository URL
+    required: true
+  ref:
+    description: Git ref to build
+    required: true
+  project-prefix:
+    description: Docker build argument prefix, for example TIE or XWA
+    required: true
+  version:
+    description: Version passed to the upstream Dockerfile; empty uses the checked-out short SHA
+    required: false
+    default: ''
+  source-path:
+    description: Checkout path
+    required: false
+    default: source
+  artifact-path:
+    description: Local artifact output path
+    required: false
+    default: build/artifacts
+  cache-scope:
+    description: GitHub Actions cache scope
+    required: false
+    default: linux
+  cache-to:
+    description: Build cache export configuration
+    required: false
+    default: ''
+
+outputs:
+  short-sha:
+    description: Short SHA of the checked-out source
+    value: ${{ steps.sha.outputs.short }}
+  version:
+    description: Version passed to the upstream Dockerfile
+    value: ${{ steps.version.outputs.value }}
+
+runs:
+  using: composite
+  steps:
+    - name: Configure HTTPS submodule access
+      shell: bash
+      run: |
+        git config --global url."https://github.com/".insteadOf "git@github.com:"
+        git config --global --add url."https://github.com/".insteadOf "ssh://git@github.com/"
+
+    - name: Check out sources
+      uses: actions/checkout@v7
+      with:
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
+        path: ${{ inputs.source-path }}
+        submodules: recursive
+
+    - name: Determine short commit hash
+      id: sha
+      shell: bash
+      working-directory: ${{ inputs.source-path }}
+      run: echo "short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+    - name: Determine build version
+      id: version
+      shell: bash
+      run: |
+        version='${{ inputs.version }}'
+        if [ -z "$version" ]; then
+          version='git-${{ steps.sha.outputs.short }}'
+        fi
+        echo "value=$version" >> "$GITHUB_OUTPUT"
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4
+
+    - name: Build package
+      uses: docker/build-push-action@v7
+      env:
+        DOCKER_BUILD_RECORD_UPLOAD: false
+      with:
+        context: ${{ inputs.source-path }}
+        file: ${{ inputs.source-path }}/packaging/linux/Dockerfile
+        platforms: linux/amd64
+        target: artifact
+        build-args: |
+          ${{ inputs.project-prefix }}_BUILD_TYPE=Release
+          ${{ inputs.project-prefix }}_VERSION=${{ steps.version.outputs.value }}
+        outputs: type=local,dest=${{ inputs.artifact-path }}
+        cache-from: type=gha,scope=${{ inputs.cache-scope }}
+        cache-to: ${{ inputs.cache-to }}
