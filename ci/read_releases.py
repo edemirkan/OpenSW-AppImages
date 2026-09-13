@@ -56,9 +56,10 @@ def resolve_published_state(release_name):
         if error.code == 404:
             return ""
         raise
+    state_prefix = f"{release_name}|"
     for line in body.splitlines():
-        if line.startswith("OpenSW-State: "):
-            return line.removeprefix("OpenSW-State: ").strip()
+        if line.startswith(state_prefix):
+            return line.strip()
     return ""
 
 
@@ -86,7 +87,7 @@ for name, release in releases.items():
         else:
             main_sha = sha
         release_name = release["release_names"][kind]
-        source_state = f"{kind}|{release_tag if kind == 'release' else sha}"
+        source_state = f"{release_name}|{release_tag if kind == 'release' else sha}"
         if resolve_published_state(release_name) == source_state:
             continue
         should_build = True

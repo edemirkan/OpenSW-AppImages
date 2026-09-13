@@ -139,6 +139,5 @@ jobs:
           RELEASE_NAME: ${{ matrix.release_name }}
           RELEASE_STATE: ${{ matrix.source_state }}
           RELEASE_KIND: ${{ matrix.kind }}
-          RELEASE_NOTES: ${{ matrix.description }}
           GITHUB_SHA: ${{ github.sha }}
         run: bash ci/publish_release.sh
