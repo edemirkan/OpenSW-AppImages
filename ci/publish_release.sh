@@ -19,8 +19,7 @@ if gh release view "$RELEASE_NAME" >/dev/null 2>&1; then
     gh release edit "$RELEASE_NAME" --prerelease=false
     gh release edit "$RELEASE_NAME" \
       --title "$release_title" \
-      --notes-file release-notes.md \
-      --latest
+      --notes-file release-notes.md
   else
     gh release edit "$RELEASE_NAME" \
       --title "$release_title" \
@@ -33,8 +32,7 @@ else
     gh release create "$RELEASE_NAME" dist/* \
       --title "$release_title" \
       --notes-file release-notes.md \
-      --target "$GITHUB_SHA" \
-      --latest
+      --target "$GITHUB_SHA"
   else
     gh release create "$RELEASE_NAME" dist/* \
       --title "$release_title" \
