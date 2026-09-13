@@ -89,7 +89,11 @@ for name, release in releases.items():
         else:
             main_sha = sha
         release_name = release["release_names"][kind]
-        source_state = f"{release_name}|{release_tag if kind == 'release' else sha}"
+        source_state = (
+            f"{release_name}|{release_tag}|{sha}"
+            if kind == "release"
+            else f"{release_name}|{sha}"
+        )
         published_state, published_prerelease = resolve_published_state(release_name)
         if published_state == source_state and published_prerelease == expected_prerelease:
             continue
