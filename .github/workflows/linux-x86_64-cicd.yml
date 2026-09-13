@@ -1,7 +1,6 @@
 name: Build, Package and Release Linux x86_64 AppImages
 
 on:
-  workflow_dispatch:
   workflow_call:
 
 permissions:
