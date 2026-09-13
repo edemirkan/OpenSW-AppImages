@@ -140,6 +140,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_NAME: ${{ matrix.release_name }}
+          RELEASE_VERSION: ${{ matrix.release_version }}
           RELEASE_STATE: ${{ matrix.source_state }}
           PACKAGE_BRANCH: ${{ github.ref_name }}
           GITHUB_SHA: ${{ github.sha }}

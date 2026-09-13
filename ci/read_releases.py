@@ -103,6 +103,7 @@ for name, release in releases.items():
             "ref": ref,
             "repository": repository,
             "release_name": release_name,
+            "release_version": release_tag if kind == "release" else sha,
             "source_state": source_state,
             "sha": sha,
             "slug": slug,
