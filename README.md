@@ -10,13 +10,13 @@ This repository builds unofficial AppImages for compiled releases from:
 ## Download
 ### Stable
 
-- [OpenTIE](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/opentie-release)
-- [OpenXWA](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/openxwa-release)
-- [OpenXvT](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/openxvt-release)
+- [OpenTIE](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/opentie)
+- [OpenXWA](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/openxwa)
+- [OpenXvT](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/openxvt)
 
 ### Bleeding Edge
-- [OpenTIE](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/opentie-main)
-- [OpenXWA](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/openxwa-main)
-- [OpenXvT](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/openxvt-main)
+- [OpenTIE](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/opentie-edge)
+- [OpenXWA](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/openxwa-edge)
+- [OpenXvT](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/openxvt-edge)
 
 The AppImages are community-packaged distributions and are not official releases of the upstream projects.

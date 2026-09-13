@@ -88,7 +88,8 @@ for name, release in releases.items():
             release_sha = sha
         else:
             main_sha = sha
-        release_name = release["release_names"][kind]
+        release_channel = "stable" if kind == "release" else "edge"
+        release_name = release["release_names"][release_channel]
         source_state = (
             f"{release_name}|{release_tag}|{sha}"
             if kind == "release"

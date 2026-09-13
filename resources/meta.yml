@@ -1,21 +1,21 @@
 OpenTIE:
   description: "OpenTIE is an open-source reimplementation of Star Wars: TIE Fighter."
   release_names:
-    release: opentie-release
-    main: opentie-main
+    stable: opentie
+    edge: opentie-edge
   scm:
     url: elyosh/OpenTIE
 OpenXWA:
   description: "OpenXWA is an open-source reimplementation of the 1999 game Star Wars: X-Wing Alliance."
   release_names:
-    release: openxwa-release
-    main: openxwa-main
+    stable: openxwa
+    edge: openxwa-edge
   scm:
     url: elyosh/OpenXWA
 OpenXvT:
   description: "OpenXvT is an open-source reimplementation of the 1997 game Star Wars: X-Wing vs. TIE Fighter with its Balance of Power expansion."
   release_names:
-    release: openxvt-release
-    main: openxvt-main
+    stable: openxvt
+    edge: openxvt-edge
   scm:
     url: elyosh/OpenXvT
