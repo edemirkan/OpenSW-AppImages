@@ -104,6 +104,8 @@ for name, release in releases.items():
             "repository": repository,
             "release_name": release_name,
             "release_version": release_tag if kind == "release" else sha,
+            "title_name": name,
+            "title_value": release_tag if kind == "release" else f"main@{sha}",
             "source_state": source_state,
             "sha": sha,
             "slug": slug,

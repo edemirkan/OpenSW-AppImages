@@ -1,4 +1,4 @@
-OpenTie:
+OpenTIE:
   description: "OpenTIE is an open-source reimplementation of Star Wars: TIE Fighter."
   release_names:
     release: opentie-release
