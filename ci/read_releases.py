@@ -1,6 +1,7 @@
 import os
 import json
 import subprocess
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -40,9 +41,34 @@ def resolve_latest_release(repository):
     return tag, version
 
 
+def resolve_published_state(release_name):
+    request = urllib.request.Request(
+        f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/releases/tags/{release_name}",
+        headers={"Accept": "application/vnd.github+json", "User-Agent": "OpenSW-AppImages"},
+    )
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        request.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib.request.urlopen(request) as response:
+            release = json.load(response)
+    except urllib.error.HTTPError as error:
+        if error.code == 404:
+            return "", False
+        raise
+    body = release.get("body", "")
+    state_prefix = f"{release_name}|"
+    for line in body.splitlines():
+        if line.startswith(state_prefix):
+            return line.strip(), release.get("prerelease", False)
+    return "", release.get("prerelease", False)
+
+
 output_lines = []
 release_notes = []
 matrix = []
+should_build = False
+expected_prerelease = os.environ.get("PACKAGE_BRANCH", "main") != "main"
 for name, release in releases.items():
     repository = release["scm"]["url"]
     release_tag, version = resolve_latest_release(repository)
@@ -62,6 +88,12 @@ for name, release in releases.items():
             release_sha = sha
         else:
             main_sha = sha
+        release_name = release["release_names"][kind]
+        source_state = f"{release_name}|{release_tag if kind == 'release' else sha}"
+        published_state, published_prerelease = resolve_published_state(release_name)
+        if published_state == source_state and published_prerelease == expected_prerelease:
+            continue
+        should_build = True
         matrix.append({
             "build_label": f"release@{release_tag}, {sha}" if kind == "release" else f"main@{sha}",
             "description": description,
@@ -70,6 +102,8 @@ for name, release in releases.items():
             "project_prefix": project_prefix,
             "ref": ref,
             "repository": repository,
+            "release_name": release_name,
+            "source_state": source_state,
             "sha": sha,
             "slug": slug,
             "executable_name": executable_name,
@@ -86,5 +120,6 @@ with open(output_path, "a", encoding="utf-8") as output_file:
     output_file.write("\n".join(release_notes))
     output_file.write("\nEOF\n")
     output_file.write("matrix<<EOF\n")
-    output_file.write(json.dumps(matrix, separators=(",", ":")))
+    output_file.write(json.dumps(matrix or [{"name": "No changes", "build_label": "skipped"}], separators=(",", ":")))
     output_file.write("\nEOF\n")
+    output_file.write(f"should_build={str(should_build).lower()}\n")

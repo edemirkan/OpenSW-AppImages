@@ -7,6 +7,7 @@ set -euo pipefail
 : "${BUILD_KIND:?BUILD_KIND is required}"
 : "${EXECUTABLE_NAME:?EXECUTABLE_NAME is required}"
 : "${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
+: "${RELEASE_NAME:?RELEASE_NAME is required}"
 : "${UPDATE_FILENAME:?UPDATE_FILENAME is required}"
 
 slug=$(printf '%s' "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]-')
@@ -44,7 +45,7 @@ printf '%s\n' '[Desktop Entry]' "X-AppImage-Version=$IMAGE_VERSION" \
 printf '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#20252b"/><text x="128" y="145" fill="white" font-size="64" text-anchor="middle">%s</text></svg>\n' "$display_name" > "$appdir/$desktop_id.svg"
 
 repository_for_update=$(printf '%s' "$GITHUB_REPOSITORY" | tr '/' '|')
-update_scheme="gh-releases-zsync|$repository_for_update|latest|$UPDATE_FILENAME"
+update_scheme="gh-releases-zsync|$repository_for_update|$RELEASE_NAME|$UPDATE_FILENAME"
 image_name="$slug-$IMAGE_VERSION-x86_64.AppImage"
 ARCH=x86_64 ./appimagetool.AppImage -u "$update_scheme" "$appdir" "dist/$image_name"
 zsyncmake "dist/$image_name" -o "dist/$image_name.zsync"

@@ -3,28 +3,42 @@ set -euo pipefail
 
 # Publish AppImages as GitHub release
 # Requires environment variables:
-#   RELEASE_NOTES - formatted release entries
+#   RELEASE_NAME - fixed GitHub release tag
+#   RELEASE_STATE - release name and upstream source state marker
+#   PACKAGE_BRANCH - branch in the packaging repository
 #   GH_TOKEN - GitHub API token
-#   GITHUB_REF_NAME - branch name
 #   GITHUB_SHA - commit SHA
 
 release_date="$(date -u +%Y.%m.%d.%H%M%S)"
-tag="appimages-${release_date}-${GITHUB_SHA::7}"
-prerelease_flag=""
-if [ "${GITHUB_REF_NAME}" != "main" ]; then
-  prerelease_flag="--prerelease"
+
+printf '%s\n' "$RELEASE_STATE" > release-notes.md
+
+if gh release view "$RELEASE_NAME" >/dev/null 2>&1; then
+  if [ "${PACKAGE_BRANCH}" = "main" ]; then
+    gh release edit "$RELEASE_NAME" --prerelease=false
+    gh release edit "$RELEASE_NAME" \
+      --title "${RELEASE_NAME} (${release_date})" \
+      --notes-file release-notes.md \
+      --latest
+  else
+    gh release edit "$RELEASE_NAME" \
+      --title "${RELEASE_NAME} (${release_date})" \
+      --notes-file release-notes.md \
+      --prerelease
+  fi
+  gh release upload "$RELEASE_NAME" dist/* --clobber
+else
+  if [ "${PACKAGE_BRANCH}" = "main" ]; then
+    gh release create "$RELEASE_NAME" dist/* \
+      --title "${RELEASE_NAME} (${release_date})" \
+      --notes-file release-notes.md \
+      --target "$GITHUB_SHA" \
+      --latest
+  else
+    gh release create "$RELEASE_NAME" dist/* \
+      --title "${RELEASE_NAME} (${release_date})" \
+      --notes-file release-notes.md \
+      --target "$GITHUB_SHA" \
+      --prerelease
+  fi
 fi
-
-{
-  echo "Unofficial AppImages built from the upstream releases."
-  echo
-  echo "Versions used:"
-  printf '%s\n' "$RELEASE_NOTES"
-} > release-notes.md
-
-gh release create "$tag" dist/* \
-  --title "OpenSW AppImages ${release_date}" \
-  --notes-file release-notes.md \
-  --target "$GITHUB_SHA" \
-  ${prerelease_flag} \
-  $(if [ "${GITHUB_REF_NAME}" = "main" ]; then echo "--latest"; fi)
