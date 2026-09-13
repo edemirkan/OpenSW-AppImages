@@ -41,9 +41,12 @@ jobs:
         id: evaluate
         env:
           SHOULD_BUILD: ${{ needs.manifest.outputs.should_build }}
+          BUILD_MATRIX: ${{ needs.manifest.outputs.matrix }}
         run: |
           if [ "$SHOULD_BUILD" = "true" ]; then
-            echo "Upstream does not match current released artifacts, continue with build."
+            echo "Upstream does not match current released artifacts, continue..."
+            echo "Upstream projects to build:"
+            printf '%s' "$BUILD_MATRIX" | jq -r '.[] | "- \(.name) (\(.build_label))"'
             echo "should_build=true" >> "$GITHUB_OUTPUT"
           else
             echo "Upstream matches currently released artifacts, noop."
