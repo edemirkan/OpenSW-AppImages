@@ -5,18 +5,17 @@ set -euo pipefail
 # Requires environment variables:
 #   RELEASE_NAME - fixed GitHub release tag
 #   RELEASE_STATE - release name and upstream source state marker
-#   RELEASE_KIND - release or main
+#   PACKAGE_BRANCH - branch in the packaging repository
 #   GH_TOKEN - GitHub API token
-#   GITHUB_REF_NAME - branch name
 #   GITHUB_SHA - commit SHA
 
 release_date="$(date -u +%Y.%m.%d.%H%M%S)"
 prerelease_flag=""
 latest_flag=""
-if [ "${RELEASE_KIND}" = "main" ]; then
-  prerelease_flag="--prerelease"
-else
+if [ "${PACKAGE_BRANCH}" = "main" ]; then
   latest_flag="--latest"
+else
+  prerelease_flag="--prerelease"
 fi
 
 printf '%s\n' "$RELEASE_STATE" > release-notes.md

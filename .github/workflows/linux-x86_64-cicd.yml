@@ -138,6 +138,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_NAME: ${{ matrix.release_name }}
           RELEASE_STATE: ${{ matrix.source_state }}
-          RELEASE_KIND: ${{ matrix.kind }}
+          PACKAGE_BRANCH: ${{ github.ref_name }}
           GITHUB_SHA: ${{ github.sha }}
         run: bash ci/publish_release.sh
