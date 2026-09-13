@@ -50,8 +50,8 @@ jobs:
             echo "should_build=false" >> "$GITHUB_OUTPUT"
           fi
 
-  build:
-    name: Build (${{ matrix.name }}, ${{ matrix.build_label }})
+  build-and-publish:
+    name: Build and publish (${{ matrix.name }}, ${{ matrix.build_label }})
     needs:
       - manifest
       - decision
@@ -132,35 +132,6 @@ jobs:
           UPDATE_FILENAME: ${{ matrix.update_filename }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: bash ci/package_appimage.sh
-
-      - name: Upload AppImage
-        uses: actions/upload-artifact@v4
-        with:
-          name: appimages-${{ matrix.slug }}-${{ matrix.kind }}
-          path: dist/*
-          if-no-files-found: error
-
-  publish:
-    name: Publish (${{ matrix.name }}, ${{ matrix.kind }})
-    needs:
-      - manifest
-      - build
-      - decision
-    if: needs.decision.outputs.should_build == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJSON(needs.manifest.outputs.matrix) }}
-    steps:
-      - name: Check out packaging repository
-        uses: actions/checkout@v4
-
-      - name: Download AppImage
-        uses: actions/download-artifact@v4
-        with:
-          name: appimages-${{ matrix.slug }}-${{ matrix.kind }}
-          path: dist
 
       - name: Publish project release
         env:
