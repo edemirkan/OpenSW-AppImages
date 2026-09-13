@@ -1,0 +1,147 @@
+name: Build, Package and Release Linux x86_64 AppImages
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: write
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.read.outputs.matrix }}
+      release: ${{ steps.read.outputs.release }}
+      release_notes: ${{ steps.read.outputs.release_notes }}
+      should_build: ${{ steps.read.outputs.should_build }}
+    steps:
+      - name: Check out packaging repository
+        uses: actions/checkout@v4
+
+      - name: Install manifest dependencies
+        run: sudo apt-get update && sudo apt-get install --yes python3-yaml
+
+      - name: Read upstream release state
+        id: read
+        env:
+          RELEASES_FILE: resources/meta.yml
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python3 ci/read_releases.py
+
+  build:
+    name: Build (${{ matrix.name }}, ${{ matrix.build_label }})
+    needs: manifest
+    if: needs.manifest.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.manifest.outputs.matrix) }}
+    steps:
+      - name: Configure HTTPS submodule access
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git config --global --add url."https://github.com/".insteadOf "ssh://git@github.com/"
+
+      - name: Check out upstream sources
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.repository }}
+          ref: ${{ matrix.ref }}
+          path: source
+          submodules: recursive
+
+      - name: Determine source commit
+        id: source
+        working-directory: source
+        run: echo "short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Determine build version
+        id: version
+        run: |
+          version='${{ matrix.version }}'
+          if [ -z "$version" ]; then
+            version="main-${{ steps.source.outputs.short }}"
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build upstream package
+        uses: docker/build-push-action@v7
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
+        with:
+          context: source
+          file: source/packaging/linux/Dockerfile
+          platforms: linux/amd64
+          target: artifact
+          build-args: |
+            ${{ matrix.project_prefix }}_BUILD_TYPE=Release
+            ${{ matrix.project_prefix }}_VERSION=${{ steps.version.outputs.value }}
+          outputs: type=local,dest=build/artifacts
+          cache-from: type=gha,scope=linux-${{ matrix.slug }}
+          cache-to: ${{ github.event_name == 'push' && format('type=gha,mode=max,scope=linux-{0}', matrix.slug) || '' }}
+
+      - name: Install packaging dependencies
+        run: sudo apt-get update && sudo apt-get install --yes xz-utils file zsync
+
+      - name: Download appimagetool
+        run: |
+          curl --fail --location --silent --show-error \
+            https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage \
+            --output appimagetool.AppImage
+          chmod +x appimagetool.AppImage
+
+      - name: Package AppImage
+        env:
+          PROJECT_NAME: ${{ matrix.name }}
+          BUILD_KIND: ${{ matrix.kind }}
+          EXECUTABLE_NAME: ${{ matrix.executable_name }}
+          IMAGE_VERSION: ${{ steps.version.outputs.value }}
+          DESCRIPTION: ${{ matrix.description }}
+          RELEASE_NAME: ${{ matrix.release_name }}
+          UPDATE_FILENAME: ${{ matrix.update_filename }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: bash ci/package_appimage.sh
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: appimages-${{ matrix.slug }}-${{ matrix.kind }}
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    name: Publish (${{ matrix.name }}, ${{ matrix.kind }})
+    needs:
+      - manifest
+      - build
+    if: needs.manifest.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.manifest.outputs.matrix) }}
+    steps:
+      - name: Check out packaging repository
+        uses: actions/checkout@v4
+
+      - name: Download AppImage
+        uses: actions/download-artifact@v4
+        with:
+          name: appimages-${{ matrix.slug }}-${{ matrix.kind }}
+          path: dist
+
+      - name: Publish project release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_NAME: ${{ matrix.release_name }}
+          RELEASE_STATE: ${{ matrix.source_state }}
+          RELEASE_KIND: ${{ matrix.kind }}
+          RELEASE_NOTES: ${{ matrix.description }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: bash ci/publish_release.sh

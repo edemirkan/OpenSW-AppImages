@@ -1,115 +1,20 @@
-name: Build, Package and Release AppImages
+name: Build AppImages
 
 on:
   workflow_dispatch:
-  # schedule:
-  #   - cron: "17 3 * * *"
   push:
     paths:
       - resources/meta.yml
       - ci/read_releases.py
       - ci/package_appimage.sh
       - ci/publish_release.sh
-      - .github/actions/build-project/action.yml
       - .github/workflows/cicd.yml
+      - .github/workflows/linux-x86_64-cicd.yml
 
 permissions:
   contents: write
 
 jobs:
-  manifest:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.read.outputs.matrix }}
-      release: ${{ steps.read.outputs.release }}
-      release_notes: ${{ steps.read.outputs.release_notes }}
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Install manifest dependencies
-        run: sudo apt-get update && sudo apt-get install --yes python3-yaml
-
-      - name: Read release manifest
-        id: read
-        env:
-          RELEASES_FILE: resources/meta.yml
-          GITHUB_TOKEN: ${{ github.token }}
-        run: python3 ci/read_releases.py
-
-  build:
-    name: Build (${{ matrix.name }}, ${{ matrix.build_label }})
-    needs: manifest
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJSON(needs.manifest.outputs.matrix) }}
-    steps:
-      - name: Check out packaging repository
-        uses: actions/checkout@v4
-
-      - name: Install packaging dependencies
-        run: sudo apt-get update && sudo apt-get install --yes xz-utils file zsync
-
-      - name: Download appimagetool
-        run: |
-          curl --fail --location --silent --show-error \
-            https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage \
-            --output appimagetool.AppImage
-          chmod +x appimagetool.AppImage
-
-      - name: Build upstream package
-        id: upstream
-        uses: ./.github/actions/build-project
-        with:
-          repository: ${{ matrix.repository }}
-          ref: ${{ matrix.ref }}
-          project-prefix: ${{ matrix.project_prefix }}
-          version: ${{ matrix.version }}
-          source-path: source
-          artifact-path: build/artifacts
-          cache-scope: linux-${{ matrix.slug }}
-          cache-to: ${{ github.event_name == 'push' && format('type=gha,mode=max,scope=linux-{0}', matrix.slug) || '' }}
-
-      - name: Package AppImage
-        env:
-          PROJECT_NAME: ${{ matrix.name }}
-          BUILD_KIND: ${{ matrix.kind }}
-          EXECUTABLE_NAME: ${{ matrix.executable_name }}
-          IMAGE_VERSION: ${{ steps.upstream.outputs.version }}
-          DESCRIPTION: ${{ matrix.description }}
-          UPDATE_FILENAME: ${{ matrix.update_filename }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: bash ci/package_appimage.sh
-
-      - name: Upload AppImage
-        uses: actions/upload-artifact@v4
-        with:
-          name: appimages-${{ matrix.slug }}-${{ matrix.kind }}
-          path: dist/*
-          if-no-files-found: error
-
-  publish:
-    needs:
-      - manifest
-      - build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Download AppImages
-        uses: actions/download-artifact@v5
-        with:
-          pattern: appimages-*
-          path: dist
-          merge-multiple: true
-
-      - name: Publish GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_NOTES: ${{ needs.manifest.outputs.release_notes }}
-          GITHUB_REF_NAME: ${{ github.ref_name }}
-          GITHUB_SHA: ${{ github.sha }}
-        run: bash ci/publish_release.sh
+  linux-x86_64:
+    uses: ./.github/workflows/linux-x86_64-cicd.yml
+    secrets: inherit
