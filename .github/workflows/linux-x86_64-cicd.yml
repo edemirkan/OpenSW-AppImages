@@ -40,6 +40,9 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.manifest.outputs.matrix) }}
     steps:
+      - name: Check out packaging repository
+        uses: actions/checkout@v4
+
       - name: Configure HTTPS submodule access
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
