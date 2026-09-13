@@ -30,8 +30,8 @@ jobs:
           PACKAGE_BRANCH: ${{ github.ref_name }}
         run: python3 ci/read_releases.py
 
-  decision:
-    name: Decide whether builds are needed
+  build-matrix:
+    name: Generate build matrix
     needs: manifest
     runs-on: ubuntu-latest
     outputs:
@@ -54,8 +54,8 @@ jobs:
     name: Build and publish (${{ matrix.name }}, ${{ matrix.build_label }})
     needs:
       - manifest
-      - decision
-    if: needs.decision.outputs.should_build == 'true'
+      - build-matrix
+    if: needs.build-matrix.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
