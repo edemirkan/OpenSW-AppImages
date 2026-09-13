@@ -30,10 +30,32 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: python3 ci/read_releases.py
 
+  decision:
+    name: Decide whether builds are needed
+    needs: manifest
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.evaluate.outputs.should_build }}
+    steps:
+      - name: Evaluate upstream release state
+        id: evaluate
+        env:
+          SHOULD_BUILD: ${{ needs.manifest.outputs.should_build }}
+        run: |
+          if [ "$SHOULD_BUILD" = "true" ]; then
+            echo "Upstream does not match current released artifacts, continue with build."
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Upstream matches currently released artifacts, noop."
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
     name: Build (${{ matrix.name }}, ${{ matrix.build_label }})
-    needs: manifest
-    if: needs.manifest.outputs.should_build == 'true'
+    needs:
+      - manifest
+      - decision
+    if: needs.decision.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -123,7 +145,8 @@ jobs:
     needs:
       - manifest
       - build
-    if: needs.manifest.outputs.should_build == 'true'
+      - decision
+    if: needs.decision.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
