@@ -2,37 +2,20 @@ name: Build, Package and Release Linux x86_64 AppImages
 
 on:
   workflow_call:
+    inputs:
+      matrix:
+        required: true
+        type: string
+      should_build:
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 jobs:
-  manifest:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.read.outputs.matrix }}
-      release: ${{ steps.read.outputs.release }}
-      release_notes: ${{ steps.read.outputs.release_notes }}
-      should_build: ${{ steps.read.outputs.should_build }}
-    steps:
-      - name: Check out packaging repository
-        uses: actions/checkout@v4
-
-      - name: Install manifest dependencies
-        run: sudo apt-get update && sudo apt-get install --yes python3-yaml
-
-      - name: Read upstream release state
-        id: read
-        env:
-          RELEASES_FILE: resources/meta.yml
-          GITHUB_TOKEN: ${{ github.token }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          PACKAGE_BRANCH: ${{ github.ref_name }}
-        run: python3 ci/read_releases.py
-
   build-matrix:
     name: Generate build matrix
-    needs: manifest
     runs-on: ubuntu-latest
     outputs:
       should_build: ${{ steps.evaluate.outputs.should_build }}
@@ -40,8 +23,8 @@ jobs:
       - name: Evaluate upstream release state
         id: evaluate
         env:
-          SHOULD_BUILD: ${{ needs.manifest.outputs.should_build }}
-          BUILD_MATRIX: ${{ needs.manifest.outputs.matrix }}
+          SHOULD_BUILD: ${{ inputs.should_build }}
+          BUILD_MATRIX: ${{ inputs.matrix }}
         run: |
           if [ "$SHOULD_BUILD" = "true" ]; then
             echo "Upstream does not match current released artifacts, continue..."
@@ -54,16 +37,15 @@ jobs:
           fi
 
   build-and-publish:
-    name: Build and publish (${{ matrix.name }}, ${{ matrix.build_label }})
+    name: Build and publish changed projects
     needs:
-      - manifest
       - build-matrix
     if: needs.build-matrix.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(needs.manifest.outputs.matrix) }}
+        include: ${{ fromJSON(inputs.matrix) }}
     steps:
       - name: Check out packaging repository
         uses: actions/checkout@v4

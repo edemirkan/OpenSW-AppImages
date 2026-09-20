@@ -17,6 +17,32 @@ permissions:
   contents: write
 
 jobs:
+  project-state:
+    name: Upstream project state
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.read.outputs.matrix }}
+      should_build: ${{ steps.read.outputs.should_build }}
+    steps:
+      - name: Check out packaging repository
+        uses: actions/checkout@v4
+
+      - name: Install manifest dependencies
+        run: sudo apt-get update && sudo apt-get install --yes python3-yaml
+
+      - name: Read upstream release state
+        id: read
+        env:
+          RELEASES_FILE: resources/meta.yml
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PACKAGE_BRANCH: ${{ github.ref_name }}
+        run: python3 ci/read_releases.py
+
   linux-x86_64:
+    needs: project-state
     uses: ./.github/workflows/linux-x86_64-cicd.yml
+    with:
+      matrix: ${{ needs.project-state.outputs.matrix }}
+      should_build: ${{ needs.project-state.outputs.should_build }}
     secrets: inherit
