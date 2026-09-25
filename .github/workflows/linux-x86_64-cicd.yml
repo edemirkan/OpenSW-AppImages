@@ -37,7 +37,7 @@ jobs:
           fi
 
   build-and-publish:
-    name: Build and publish changed projects
+    name: Build and publish changed projects (${{ matrix.name }}, ${{ matrix.build_label }})
     needs:
       - build-matrix
     if: needs.build-matrix.outputs.should_build == 'true'
