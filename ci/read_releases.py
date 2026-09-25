@@ -69,6 +69,7 @@ release_notes = []
 matrix = []
 should_build = False
 expected_prerelease = os.environ.get("PACKAGE_BRANCH", "main") != "main"
+force_refresh = os.environ.get("FORCE_REFRESH", "").lower() == "true"
 for name, release in releases.items():
     repository = release["scm"]["url"]
     release_tag, version = resolve_latest_release(repository)
@@ -95,9 +96,10 @@ for name, release in releases.items():
             if kind == "release"
             else f"{release_name}|{sha}"
         )
-        published_state, published_prerelease = resolve_published_state(release_name)
-        if published_state == source_state and published_prerelease == expected_prerelease:
-            continue
+        if not force_refresh:
+            published_state, published_prerelease = resolve_published_state(release_name)
+            if published_state == source_state and published_prerelease == expected_prerelease:
+                continue
         should_build = True
         matrix.append({
             "build_label": f"release@{release_tag}, {sha}" if kind == "release" else f"main@{sha}",

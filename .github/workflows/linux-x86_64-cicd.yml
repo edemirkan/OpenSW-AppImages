@@ -27,8 +27,7 @@ jobs:
           BUILD_MATRIX: ${{ inputs.matrix }}
         run: |
           if [ "$SHOULD_BUILD" = "true" ]; then
-            echo "Upstream does not match current released artifacts, continue..."
-            echo "Upstream projects to build:"
+            echo "Builds selected for this run:"
             printf '%s' "$BUILD_MATRIX" | jq -r '.[] | "- \(.name) (\(.build_label))"'
             echo "should_build=true" >> "$GITHUB_OUTPUT"
           else
