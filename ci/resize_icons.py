@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import array
 import math
+import re
 import struct
 import zlib
 from pathlib import Path
@@ -8,7 +9,19 @@ from pathlib import Path
 
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 ICON_SIZES = (512, 256, 128, 96, 64, 48)
-PROJECTS = ("opentie", "openxwa", "openxvt")
+
+
+def read_project_slugs(manifest_path):
+    slugs = []
+    for line in manifest_path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("  slug:"):
+            match = re.fullmatch(r"  slug:\s*([a-z0-9-]+)\s*", line)
+            if not match:
+                raise ValueError(f"Invalid project slug in {manifest_path}: {line}")
+            slugs.append(match.group(1))
+    if not slugs or len(slugs) != len(set(slugs)):
+        raise ValueError(f"Manifest must define unique project slugs: {manifest_path}")
+    return slugs
 
 
 def read_rgba_png(path):
@@ -164,8 +177,9 @@ def write_rgba_png(path, size, pixels):
 
 def main():
     root = Path(__file__).resolve().parents[1]
-    for project in PROJECTS:
-        source = root / "packaging" / "linux" / project / "icon-1024.png"
+    manifest_path = root / "resources" / "meta.yml"
+    for slug in read_project_slugs(manifest_path):
+        source = root / "packaging" / "linux" / slug / "icon-1024.png"
         width, height, pixels = read_rgba_png(source)
         if width != 1024 or height != 1024:
             raise ValueError(f"Expected 1024x1024 source icon: {source}")

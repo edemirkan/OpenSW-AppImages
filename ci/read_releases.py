@@ -75,7 +75,7 @@ for name, release in releases.items():
     release_tag, version = resolve_latest_release(repository)
     description = release.get("description", "")
     output_lines.append(f"{name}|{version}|{repository}|{description}")
-    slug = "".join(character.lower() for character in name if character.isalnum() or character == "-")
+    slug = release["slug"]
     executable_name = repository.rsplit("/", 1)[-1]
     project_prefix = executable_name.removeprefix("Open").upper()
     release_sha = ""
@@ -104,6 +104,8 @@ for name, release in releases.items():
         matrix.append({
             "build_label": f"release@{release_tag}, {sha}" if kind == "release" else f"main@{sha}",
             "description": description,
+            "appstream_id": release["appstream_id"],
+            "app_summary": release["summary"],
             "kind": kind,
             "name": name,
             "project_prefix": project_prefix,

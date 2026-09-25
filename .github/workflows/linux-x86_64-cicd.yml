@@ -96,7 +96,7 @@ jobs:
           cache-to: ${{ github.event_name == 'push' && format('type=gha,mode=max,scope=linux-{0}', matrix.slug) || '' }}
 
       - name: Install packaging dependencies
-        run: sudo apt-get update && sudo apt-get install --yes xz-utils file zsync
+        run: sudo apt-get update && sudo apt-get install --yes xz-utils file zsync gettext-base
 
       - name: Download appimagetool
         run: |
@@ -108,6 +108,9 @@ jobs:
       - name: Package AppImage
         env:
           PROJECT_NAME: ${{ matrix.name }}
+          PROJECT_SLUG: ${{ matrix.slug }}
+          APPSTREAM_ID: ${{ matrix.appstream_id }}
+          APP_SUMMARY: ${{ matrix.app_summary }}
           BUILD_KIND: ${{ matrix.kind }}
           EXECUTABLE_NAME: ${{ matrix.executable_name }}
           IMAGE_VERSION: ${{ steps.version.outputs.value }}

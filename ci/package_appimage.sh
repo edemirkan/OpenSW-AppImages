@@ -2,6 +2,9 @@
 set -euo pipefail
 
 : "${PROJECT_NAME:?PROJECT_NAME is required}"
+: "${PROJECT_SLUG:?PROJECT_SLUG is required}"
+: "${APPSTREAM_ID:?APPSTREAM_ID is required}"
+: "${APP_SUMMARY:?APP_SUMMARY is required}"
 : "${IMAGE_VERSION:?IMAGE_VERSION is required}"
 : "${DESCRIPTION:?DESCRIPTION is required}"
 : "${BUILD_KIND:?BUILD_KIND is required}"
@@ -10,20 +13,24 @@ set -euo pipefail
 : "${RELEASE_NAME:?RELEASE_NAME is required}"
 : "${UPDATE_FILENAME:?UPDATE_FILENAME is required}"
 
-slug=$(printf '%s' "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]-')
+slug="$PROJECT_SLUG"
 desktop_id="$slug"
 display_name="$PROJECT_NAME"
 if [ "$BUILD_KIND" = main ]; then
   desktop_id="$slug-main"
   display_name="$PROJECT_NAME (main)"
 fi
+template_dir="packaging/linux/$slug"
 workdir="build/package-$slug"
 appdir="$workdir/$slug.AppDir"
 artifact=$(find build/artifacts -type f -name '*.tar.xz' -print -quit)
 [ -n "$artifact" ] || { echo "No build artifact found for $PROJECT_NAME ($IMAGE_VERSION)" >&2; exit 1; }
+[ -f "$template_dir/AppRun" ] || { echo "Missing AppRun template: $template_dir/AppRun" >&2; exit 1; }
+[ -f "$template_dir/desktop.in" ] || { echo "Missing desktop template: $template_dir/desktop.in" >&2; exit 1; }
+[ -f "$template_dir/metainfo.xml.in" ] || { echo "Missing AppStream template: $template_dir/metainfo.xml.in" >&2; exit 1; }
 
 rm -rf "$workdir"
-mkdir -p "$appdir/usr/lib/$slug" dist
+mkdir -p "$appdir/usr/lib/$slug" "$appdir/usr/share/metainfo" dist
 tar --extract --file "$artifact" --strip-components=1 --directory "$appdir/usr/lib/$slug"
 
 executable="$appdir/usr/lib/$slug/$EXECUTABLE_NAME"
@@ -31,18 +38,29 @@ executable="$appdir/usr/lib/$slug/$EXECUTABLE_NAME"
 [ -x "$executable" ] || { echo "Expected executable not found: $executable" >&2; exit 1; }
 executable_path=${executable#"$appdir/usr/lib/$slug/"}
 
-printf '%s\n' '#!/bin/sh' 'set -e' \
-  'HERE="$(dirname "$(readlink -f "$0")")"' \
-  "exec \"\$HERE/usr/lib/$slug/$executable_path\" \"\$@\"" \
-  > "$appdir/AppRun"
+export APP_ID="$APPSTREAM_ID"
+export APP_SUMMARY
+export APP_DISPLAY_NAME="$display_name"
+export APP_SLUG="$slug"
+export DESKTOP_ID="$desktop_id"
+export IMAGE_VERSION DESCRIPTION EXECUTABLE_PATH="$executable_path"
+
+envsubst '${APP_SLUG} ${EXECUTABLE_PATH}' \
+  < "$template_dir/AppRun" > "$appdir/AppRun"
 chmod +x "$appdir/AppRun"
 
-printf '%s\n' '[Desktop Entry]' "X-AppImage-Version=$IMAGE_VERSION" \
-  "Comment=$DESCRIPTION" \
-  "Name=$display_name" "Exec=$slug" "Icon=$desktop_id" \
-  'Type=Application' 'Categories=Game;' \
-  > "$appdir/$desktop_id.desktop"
-printf '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#20252b"/><text x="128" y="145" fill="white" font-size="64" text-anchor="middle">%s</text></svg>\n' "$display_name" > "$appdir/$desktop_id.svg"
+envsubst '${APP_DISPLAY_NAME} ${APP_SLUG} ${DESKTOP_ID} ${IMAGE_VERSION} ${DESCRIPTION}' \
+  < "$template_dir/desktop.in" > "$appdir/$desktop_id.desktop"
+envsubst '${APP_ID} ${APP_SUMMARY} ${APP_DISPLAY_NAME} ${DESCRIPTION} ${DESKTOP_ID}' \
+  < "$template_dir/metainfo.xml.in" > "$appdir/usr/share/metainfo/$APPSTREAM_ID.metainfo.xml"
+
+for size in 48 64 96 128 256 512; do
+  icon="$template_dir/icon-$size.png"
+  [ -f "$icon" ] || { echo "Missing icon: $icon" >&2; exit 1; }
+  install -D -m 0644 "$icon" \
+    "$appdir/usr/share/icons/hicolor/${size}x${size}/apps/$desktop_id.png"
+done
+install -m 0644 "$template_dir/icon-512.png" "$appdir/$desktop_id.png"
 
 repository_for_update=$(printf '%s' "$GITHUB_REPOSITORY" | tr '/' '|')
 update_scheme="gh-releases-zsync|$repository_for_update|$RELEASE_NAME|$UPDATE_FILENAME"

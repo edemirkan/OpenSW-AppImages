@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=${APP_DISPLAY_NAME}
+Comment=${DESCRIPTION}
+Exec=${APP_SLUG}
+Icon=${DESKTOP_ID}
+X-AppImage-Version=${IMAGE_VERSION}
+Categories=Game;
