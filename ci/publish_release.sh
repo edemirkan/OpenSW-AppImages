@@ -15,50 +15,19 @@ printf '%s\n' "$RELEASE_STATE" > release-notes.md
 release_title="${RELEASE_TITLE_NAME} ${RELEASE_TITLE_VALUE}"
 
 if gh release view "$RELEASE_NAME" >/dev/null 2>&1; then
-  if [ "${PACKAGE_BRANCH}" = "main" ]; then
-    gh release edit "$RELEASE_NAME" --prerelease=false
-    gh release edit "$RELEASE_NAME" \
-      --title "$release_title" \
-      --notes-file release-notes.md
-  else
-    gh release edit "$RELEASE_NAME" \
-      --title "$release_title" \
-      --notes-file release-notes.md \
-      --prerelease
-  fi
-  gh release upload "$RELEASE_NAME" dist/* --clobber
-else
-  if [ "${PACKAGE_BRANCH}" = "main" ]; then
-    gh release create "$RELEASE_NAME" dist/* \
-      --title "$release_title" \
-      --notes-file release-notes.md \
-      --target "$GITHUB_SHA"
-  else
-    gh release create "$RELEASE_NAME" dist/* \
-      --title "$release_title" \
-      --notes-file release-notes.md \
-      --target "$GITHUB_SHA" \
-      --prerelease
-  fi
+  # Recreate the release to refresh GitHub's published date; preserve its fixed tag.
+  gh release delete "$RELEASE_NAME" --yes
 fi
 
-existing_assets=$(gh release view "$RELEASE_NAME" --json assets --jq '.assets[].name')
-current_assets=()
-for file in dist/*; do
-  [ -f "$file" ] || continue
-  current_assets+=("$(basename "$file")")
-done
-
-while IFS= read -r asset; do
-  [ -n "$asset" ] || continue
-  keep_asset=false
-  for current_asset in "${current_assets[@]}"; do
-    if [ "$asset" = "$current_asset" ]; then
-      keep_asset=true
-      break
-    fi
-  done
-  if [ "$keep_asset" = false ]; then
-    gh release delete-asset "$RELEASE_NAME" "$asset" --yes
-  fi
-done <<< "$existing_assets"
+if [ "${PACKAGE_BRANCH}" = "main" ]; then
+  gh release create "$RELEASE_NAME" dist/* \
+    --title "$release_title" \
+    --notes-file release-notes.md \
+    --target "$GITHUB_SHA"
+else
+  gh release create "$RELEASE_NAME" dist/* \
+    --title "$release_title" \
+    --notes-file release-notes.md \
+    --target "$GITHUB_SHA" \
+    --prerelease
+fi
