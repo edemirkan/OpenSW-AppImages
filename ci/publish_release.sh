@@ -41,3 +41,24 @@ else
       --prerelease
   fi
 fi
+
+existing_assets=$(gh release view "$RELEASE_NAME" --json assets --jq '.assets[].name')
+current_assets=()
+for file in dist/*; do
+  [ -f "$file" ] || continue
+  current_assets+=("$(basename "$file")")
+done
+
+while IFS= read -r asset; do
+  [ -n "$asset" ] || continue
+  keep_asset=false
+  for current_asset in "${current_assets[@]}"; do
+    if [ "$asset" = "$current_asset" ]; then
+      keep_asset=true
+      break
+    fi
+  done
+  if [ "$keep_asset" = false ]; then
+    gh release delete-asset "$RELEASE_NAME" "$asset" --yes
+  fi
+done <<< "$existing_assets"
