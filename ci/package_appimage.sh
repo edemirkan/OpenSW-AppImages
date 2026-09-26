@@ -64,6 +64,10 @@ install -m 0644 "$template_dir/icon-512.png" "$appdir/$desktop_id.png"
 
 repository_for_update=$(printf '%s' "$GITHUB_REPOSITORY" | tr '/' '|')
 update_scheme="gh-releases-zsync|$repository_for_update|$RELEASE_NAME|$UPDATE_FILENAME"
-image_name="$slug-$IMAGE_VERSION-x86_64.AppImage"
+image_version="$IMAGE_VERSION"
+if [ "$BUILD_KIND" = release ]; then
+  image_version="v$image_version"
+fi
+image_name="$slug-$image_version-x86_64.AppImage"
 ARCH=x86_64 ./appimagetool.AppImage -u "$update_scheme" "$appdir" "dist/$image_name"
 zsyncmake "dist/$image_name" -o "dist/$image_name.zsync"

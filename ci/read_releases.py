@@ -119,7 +119,7 @@ for name, release in releases.items():
             "sha": sha,
             "slug": slug,
             "executable_name": executable_name,
-            "update_filename": f"{slug}-{'main-' if kind == 'main' else ''}*-x86_64.AppImage.zsync",
+            "update_filename": f"{slug}-{'main-' if kind == 'main' else 'v'}*-x86_64.AppImage.zsync",
             "version": build_version,
         })
     release_notes.append(f"- {name}: release@{release_tag} ({release_sha}), main@{main_sha}")
