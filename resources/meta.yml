@@ -28,3 +28,13 @@ OpenXvT:
     edge: openxvt-edge
   scm:
     url: elyosh/OpenXvT
+OpenXW:
+  slug: openxw
+  appstream_id: io.github.elyosh.OpenXW
+  summary: "A reimplementation of Star Wars: X-Wing."
+  description: "OpenXW is an open-source reimplementation of the 1993 game Star Wars: X-Wing."
+  release_names:
+    stable: openxw
+    edge: openxw-edge
+  scm:
+    url: elyosh/OpenXW
