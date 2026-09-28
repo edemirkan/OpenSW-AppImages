@@ -3,6 +3,7 @@
 This repository builds unofficial AppImages for compiled releases from:
 
 - [OpenTIE](https://github.com/elyosh/OpenTIE)
+- [OpenXW](https://github.com/elyosh/OpenXW)
 - [OpenXWA](https://github.com/elyosh/OpenXWA)
 - [OpenXvT](https://github.com/elyosh/OpenXvT)
 
@@ -11,11 +12,13 @@ This repository builds unofficial AppImages for compiled releases from:
 ### Stable
 
 - [OpenTIE](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/opentie)
+- [OpenXW](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/openxw)
 - [OpenXWA](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/openxwa)
 - [OpenXvT](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/openxvt)
 
-### Bleeding Edge
+### Edge
 - [OpenTIE](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/opentie-edge)
+- [OpenXW](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/openxw-edge)
 - [OpenXWA](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/openxwa-edge)
 - [OpenXvT](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/openxvt-edge)
 
