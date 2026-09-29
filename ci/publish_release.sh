@@ -1,33 +1,47 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Publish AppImages as GitHub release
+# Publish AppImages to the persistent latest GitHub release.
 # Requires environment variables:
-#   RELEASE_NAME - fixed GitHub release tag
-#   RELEASE_TITLE_NAME - original project name from meta.yml
-#   RELEASE_TITLE_VALUE - release tag or main@sha
-#   RELEASE_STATE - release name and upstream source state marker
-#   PACKAGE_BRANCH - branch in the packaging repository
+#   RELEASE_NAME - fixed GitHub release tag (latest)
+#   PROJECT_SLUG - project asset-name prefix
+#   BUILD_KIND - main or release
 #   GH_TOKEN - GitHub API token
 #   GITHUB_SHA - commit SHA
 
-printf '%s\n' "$RELEASE_STATE" > release-notes.md
-release_title="${RELEASE_TITLE_NAME} ${RELEASE_TITLE_VALUE}"
-
-if gh release view "$RELEASE_NAME" >/dev/null 2>&1; then
-  # Recreate the release to refresh GitHub's published date; preserve its fixed tag.
-  gh release delete "$RELEASE_NAME" --yes
-fi
-
-if [ "${PACKAGE_BRANCH}" = "main" ]; then
-  gh release create "$RELEASE_NAME" dist/* \
-    --title "$release_title" \
-    --notes-file release-notes.md \
-    --target "$GITHUB_SHA"
-else
-  gh release create "$RELEASE_NAME" dist/* \
-    --title "$release_title" \
-    --notes-file release-notes.md \
+if ! gh release view "$RELEASE_NAME" >/dev/null 2>&1; then
+  gh release create "$RELEASE_NAME" \
+    --title "OpenSW AppImages" \
+    --notes "Latest AppImages for all supported OpenSW projects." \
     --target "$GITHUB_SHA" \
-    --prerelease
+    || gh release view "$RELEASE_NAME" >/dev/null
 fi
+gh release upload "$RELEASE_NAME" dist/* --clobber
+
+case "$BUILD_KIND" in
+  main) asset_prefix="$PROJECT_SLUG-main-" ;;
+  release) asset_prefix="$PROJECT_SLUG-v" ;;
+  *) echo "Unsupported build kind: $BUILD_KIND" >&2; exit 1 ;;
+esac
+
+current_assets=()
+for asset in dist/*; do
+  current_assets+=("$(basename "$asset")")
+done
+
+while IFS= read -r published_asset; do
+  case "$published_asset" in
+    "$asset_prefix"*)
+      keep_asset=false
+      for current_asset in "${current_assets[@]}"; do
+        if [ "$published_asset" = "$current_asset" ]; then
+          keep_asset=true
+          break
+        fi
+      done
+      if [ "$keep_asset" = false ]; then
+        gh release delete-asset "$RELEASE_NAME" "$published_asset" --yes
+      fi
+      ;;
+  esac
+done < <(gh release view "$RELEASE_NAME" --json assets --jq '.assets[].name')

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       force_refresh:
-        description: Rebuild every project and release channel
+        description: Rebuild every project and asset
         required: false
         default: false
         type: boolean
@@ -42,7 +42,6 @@ jobs:
           RELEASES_FILE: resources/meta.yml
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          PACKAGE_BRANCH: ${{ github.ref_name }}
           FORCE_REFRESH: ${{ inputs.force_refresh }}
         run: python3 ci/read_releases.py
 
