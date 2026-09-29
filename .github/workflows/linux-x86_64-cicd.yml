@@ -124,9 +124,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_NAME: ${{ matrix.release_name }}
-          RELEASE_TITLE_NAME: ${{ matrix.title_name }}
-          RELEASE_TITLE_VALUE: ${{ matrix.title_value }}
-          RELEASE_STATE: ${{ matrix.source_state }}
-          PACKAGE_BRANCH: ${{ github.ref_name }}
+          PROJECT_SLUG: ${{ matrix.slug }}
+          BUILD_KIND: ${{ matrix.kind }}
           GITHUB_SHA: ${{ github.sha }}
         run: bash ci/publish_release.sh

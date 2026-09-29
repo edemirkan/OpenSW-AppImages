@@ -41,9 +41,9 @@ def resolve_latest_release(repository):
     return tag, version
 
 
-def resolve_published_state(release_name):
+def resolve_release_assets():
     request = urllib.request.Request(
-        f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/releases/tags/{release_name}",
+        f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/releases/tags/latest",
         headers={"Accept": "application/vnd.github+json", "User-Agent": "OpenSW-AppImages"},
     )
     token = os.environ.get("GITHUB_TOKEN")
@@ -54,51 +54,31 @@ def resolve_published_state(release_name):
             release = json.load(response)
     except urllib.error.HTTPError as error:
         if error.code == 404:
-            return "", False
+            return set()
         raise
-    body = release.get("body", "")
-    state_prefix = f"{release_name}|"
-    for line in body.splitlines():
-        if line.startswith(state_prefix):
-            return line.strip(), release.get("prerelease", False)
-    return "", release.get("prerelease", False)
+    return {asset["name"] for asset in release.get("assets", [])}
 
 
-output_lines = []
-release_notes = []
 matrix = []
 should_build = False
-expected_prerelease = os.environ.get("PACKAGE_BRANCH", "main") != "main"
 force_refresh = os.environ.get("FORCE_REFRESH", "").lower() == "true"
+published_assets = resolve_release_assets()
 for name, release in releases.items():
     repository = release["scm"]["url"]
     release_tag, version = resolve_latest_release(repository)
     description = release.get("description", "")
-    output_lines.append(f"{name}|{version}|{repository}|{description}")
     slug = release["slug"]
     executable_name = repository.rsplit("/", 1)[-1]
     project_prefix = executable_name.removeprefix("Open").upper()
-    release_sha = ""
-    main_sha = ""
     for kind, ref, build_version in (
         ("release", release_tag, version),
         ("main", "main", ""),
     ):
         sha = resolve_sha(repository, ref)
-        if kind == "release":
-            release_sha = sha
-        else:
-            main_sha = sha
-        release_channel = "stable" if kind == "release" else "edge"
-        release_name = release["release_names"][release_channel]
-        source_state = (
-            f"{release_name}|{release_tag}|{sha}"
-            if kind == "release"
-            else f"{release_name}|{sha}"
-        )
+        image_version = f"v{build_version}" if kind == "release" else f"main-{sha}"
+        expected_asset = f"{slug}-{image_version}-x86_64.AppImage"
         if not force_refresh:
-            published_state, published_prerelease = resolve_published_state(release_name)
-            if published_state == source_state and published_prerelease == expected_prerelease:
+            if expected_asset in published_assets and f"{expected_asset}.zsync" in published_assets:
                 continue
         should_build = True
         matrix.append({
@@ -111,26 +91,13 @@ for name, release in releases.items():
             "project_prefix": project_prefix,
             "ref": ref,
             "repository": repository,
-            "release_name": release_name,
-            "release_version": release_tag if kind == "release" else sha,
-            "title_name": name,
-            "title_value": release_tag if kind == "release" else f"main@{sha}",
-            "source_state": source_state,
-            "sha": sha,
+            "release_name": "latest",
             "slug": slug,
             "executable_name": executable_name,
             "update_filename": f"{slug}-{'main-' if kind == 'main' else 'v'}*-x86_64.AppImage.zsync",
             "version": build_version,
         })
-    release_notes.append(f"- {name}: release@{release_tag} ({release_sha}), main@{main_sha}")
-
 with open(output_path, "a", encoding="utf-8") as output_file:
-    output_file.write("release<<EOF\n")
-    output_file.write("\n".join(output_lines))
-    output_file.write("\nEOF\n")
-    output_file.write("release_notes<<EOF\n")
-    output_file.write("\n".join(release_notes))
-    output_file.write("\nEOF\n")
     output_file.write("matrix<<EOF\n")
     output_file.write(json.dumps(matrix or [{"name": "No changes", "build_label": "skipped"}], separators=(",", ":")))
     output_file.write("\nEOF\n")

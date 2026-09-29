@@ -3,9 +3,6 @@ OpenTIE:
   appstream_id: io.github.elyosh.OpenTIE
   summary: "A reimplementation of Star Wars: TIE Fighter."
   description: "OpenTIE is an open-source reimplementation of Star Wars: TIE Fighter."
-  release_names:
-    stable: opentie
-    edge: opentie-edge
   scm:
     url: elyosh/OpenTIE
 OpenXWA:
@@ -13,9 +10,6 @@ OpenXWA:
   appstream_id: io.github.elyosh.OpenXWA
   summary: "A reimplementation of Star Wars: X-Wing Alliance."
   description: "OpenXWA is an open-source reimplementation of the 1999 game Star Wars: X-Wing Alliance."
-  release_names:
-    stable: openxwa
-    edge: openxwa-edge
   scm:
     url: elyosh/OpenXWA
 OpenXvT:
@@ -23,9 +17,6 @@ OpenXvT:
   appstream_id: io.github.elyosh.OpenXvT
   summary: "A reimplementation of Star Wars: X-Wing vs. TIE Fighter."
   description: "OpenXvT is an open-source reimplementation of the 1997 game Star Wars: X-Wing vs. TIE Fighter with its Balance of Power expansion."
-  release_names:
-    stable: openxvt
-    edge: openxvt-edge
   scm:
     url: elyosh/OpenXvT
 OpenXW:
@@ -33,8 +24,5 @@ OpenXW:
   appstream_id: io.github.elyosh.OpenXW
   summary: "A reimplementation of Star Wars: X-Wing."
   description: "OpenXW is an open-source reimplementation of the 1993 game Star Wars: X-Wing."
-  release_names:
-    stable: openxw
-    edge: openxw-edge
   scm:
     url: elyosh/OpenXW
