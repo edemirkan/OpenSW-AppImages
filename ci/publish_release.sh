@@ -12,11 +12,13 @@ set -euo pipefail
 case "$BUILD_KIND" in
   main)
     release_title="OpenSW AppImages Edge"
+    release_notes="Latest Pre-Release AppImages for all supported OpenSW projects."
     release_flags=(--prerelease)
     asset_prefix="$PROJECT_SLUG-main-"
     ;;
   release)
     release_title="OpenSW AppImages"
+    release_notes="Latest Release AppImages for all supported OpenSW projects."
     release_flags=()
     asset_prefix="$PROJECT_SLUG-v"
     ;;
@@ -26,14 +28,15 @@ esac
 if ! gh release view "$RELEASE_NAME" >/dev/null 2>&1; then
   gh release create "$RELEASE_NAME" \
     --title "$release_title" \
-    --notes "Latest AppImages for all supported OpenSW projects." \
+    --notes "$release_notes" \
     --target "$GITHUB_SHA" \
     "${release_flags[@]}" \
     || gh release view "$RELEASE_NAME" >/dev/null
 fi
-if [ "$BUILD_KIND" = main ]; then
-  gh release edit "$RELEASE_NAME" --title "$release_title" --prerelease
-fi
+gh release edit "$RELEASE_NAME" \
+  --title "$release_title" \
+  --notes "$release_notes" \
+  "${release_flags[@]}"
 gh release upload "$RELEASE_NAME" dist/* --clobber
 
 current_assets=()

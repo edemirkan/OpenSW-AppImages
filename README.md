@@ -9,7 +9,8 @@ This repository builds unofficial AppImages for compiled releases from:
 
 
 ## Download
-[Stable AppImages](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/latest) and [Edge AppImages](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/edge) for all supported projects.
+[Latest Release AppImages](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/latest) for all supported OpenSW projects.
+[Latest Pre-Release AppImages](https://github.com/edemirkan/OpenSW-AppImages/releases/tag/edge) for all supported OpenSW projects.
 
 The stable release contains versioned builds; the Edge pre-release contains main-branch builds.
 
