@@ -41,9 +41,9 @@ def resolve_latest_release(repository):
     return tag, version
 
 
-def resolve_release_assets():
+def resolve_release_assets(tag):
     request = urllib.request.Request(
-        f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/releases/tags/latest",
+        f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/releases/tags/{tag}",
         headers={"Accept": "application/vnd.github+json", "User-Agent": "OpenSW-AppImages"},
     )
     token = os.environ.get("GITHUB_TOKEN")
@@ -62,7 +62,7 @@ def resolve_release_assets():
 matrix = []
 should_build = False
 force_refresh = os.environ.get("FORCE_REFRESH", "").lower() == "true"
-published_assets = resolve_release_assets()
+published_assets_by_release = {}
 for name, release in releases.items():
     repository = release["scm"]["url"]
     release_tag, version = resolve_latest_release(repository)
@@ -74,6 +74,10 @@ for name, release in releases.items():
         ("release", release_tag, version),
         ("main", "main", ""),
     ):
+        release_name = "edge" if kind == "main" else "latest"
+        if release_name not in published_assets_by_release:
+            published_assets_by_release[release_name] = resolve_release_assets(release_name)
+        published_assets = published_assets_by_release[release_name]
         sha = resolve_sha(repository, ref)
         image_version = f"v{build_version}" if kind == "release" else f"main-{sha}"
         expected_asset = f"{slug}-{image_version}-x86_64.AppImage"
@@ -91,9 +95,10 @@ for name, release in releases.items():
             "project_prefix": project_prefix,
             "ref": ref,
             "repository": repository,
-            "release_name": "latest",
+            "release_name": release_name,
             "slug": slug,
             "executable_name": executable_name,
+            "update_release_tag": "latest-pre" if kind == "main" else "latest",
             "update_filename": f"{slug}-{'main-' if kind == 'main' else 'v'}*-x86_64.AppImage.zsync",
             "version": build_version,
         })

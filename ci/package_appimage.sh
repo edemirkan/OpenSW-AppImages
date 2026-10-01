@@ -11,6 +11,7 @@ set -euo pipefail
 : "${EXECUTABLE_NAME:?EXECUTABLE_NAME is required}"
 : "${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
 : "${RELEASE_NAME:?RELEASE_NAME is required}"
+: "${UPDATE_RELEASE_TAG:?UPDATE_RELEASE_TAG is required}"
 : "${UPDATE_FILENAME:?UPDATE_FILENAME is required}"
 
 slug="$PROJECT_SLUG"
@@ -63,7 +64,7 @@ done
 install -m 0644 "$template_dir/icon-512.png" "$appdir/$desktop_id.png"
 
 repository_for_update=$(printf '%s' "$GITHUB_REPOSITORY" | tr '/' '|')
-update_scheme="gh-releases-zsync|$repository_for_update|$RELEASE_NAME|$UPDATE_FILENAME"
+update_scheme="gh-releases-zsync|$repository_for_update|$UPDATE_RELEASE_TAG|$UPDATE_FILENAME"
 image_version="$IMAGE_VERSION"
 if [ "$BUILD_KIND" = release ]; then
   image_version="v$image_version"

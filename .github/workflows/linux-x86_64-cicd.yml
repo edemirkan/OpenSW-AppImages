@@ -116,6 +116,7 @@ jobs:
           IMAGE_VERSION: ${{ steps.version.outputs.value }}
           DESCRIPTION: ${{ matrix.description }}
           RELEASE_NAME: ${{ matrix.release_name }}
+          UPDATE_RELEASE_TAG: ${{ matrix.update_release_tag }}
           UPDATE_FILENAME: ${{ matrix.update_filename }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: bash ci/package_appimage.sh
